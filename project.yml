@@ -1,0 +1,50 @@
+# ============================================================================
+# XcodeGen 工程描述文件 —— CloudDrive WebView 壳 App
+#
+# CI 里跑 `xcodegen generate` 现场生成 CloudDrive.xcodeproj，再 xcodebuild archive。
+# 不提交 .xcodeproj，避免二进制工程文件在 git 里反复冲突。
+# ============================================================================
+
+name: CloudDrive
+
+options:
+  bundleIdPrefix: com.clouddrive
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    # 统一关闭签名：云端产出未签名 IPA，用户自己用 Apple ID 重签
+    CODE_SIGN_IDENTITY: ""
+    CODE_SIGNING_REQUIRED: "NO"
+    CODE_SIGNING_ALLOWED: "NO"
+
+targets:
+  CloudDrive:
+    type: application
+    platform: iOS
+    sources:
+      - path: CloudDrive
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.clouddrive.app
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+    info:
+      path: CloudDrive/Info.plist
+      properties:
+        CFBundleDisplayName: CloudDrive
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        # 页面是 https，但放开 ATS 以防它内部跳转到 http 资源导致白屏
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true

@@ -1,0 +1,19 @@
+# 构建产物
+build/
+DerivedData/
+*.ipa
+*.xcarchive
+
+# XcodeGen 生成的工程文件（由 project.yml 现场生成，不入库）
+*.xcodeproj
+*.xcworkspace
+
+# macOS 垃圾文件
+.DS_Store
+
+# 证书与描述文件 —— 绝对不要提交
+*.p12
+*.mobileprovision
+*.cer
+*.key
+.env
