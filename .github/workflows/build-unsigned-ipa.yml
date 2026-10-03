@@ -64,21 +64,26 @@ jobs:
         id: probe
         run: |
           set -euo pipefail
-          WS="$(find . -maxdepth 2 -name '*.xcworkspace' -not -path '*/.*' | head -1 || true)"
-          PRJ="$(find . -maxdepth 2 -name '*.xcodeproj' -not -path '*/.*' | head -1 || true)"
+          # ⚠️ .xcodeproj 内部自带 project.xcworkspace，必须排除，
+          #    否则会同时匹配到 workspace 和 project，xcodebuild 直接报
+          #    "You cannot specify both an Xcode project and a workspace."
+          WS="$(find . -maxdepth 3 -name '*.xcworkspace' -not -path '*.xcodeproj/*' | head -1 || true)"
+          PRJ="$(find . -maxdepth 2 -name '*.xcodeproj' | head -1 || true)"
           if [ -n "$WS" ]; then
-            echo "flag=-workspace" >> "$GITHUB_OUTPUT"
-            echo "container=$WS"  >> "$GITHUB_OUTPUT"
+            FLAG="-workspace"
+            CONTAINER="$WS"
           elif [ -n "$PRJ" ]; then
-            echo "flag=-project"   >> "$GITHUB_OUTPUT"
-            echo "container=$PRJ"  >> "$GITHUB_OUTPUT"
+            FLAG="-project"
+            CONTAINER="$PRJ"
           else
             echo "::error::找不到 .xcworkspace 或 .xcodeproj"
             exit 1
           fi
-          echo "检测到容器: ${WS:-$PRJ}"
+          echo "flag=$FLAG" >> "$GITHUB_OUTPUT"
+          echo "container=$CONTAINER" >> "$GITHUB_OUTPUT"
+          echo "检测到容器: $FLAG $CONTAINER"
 
-          JSON="$(xcodebuild ${WS:+-workspace "$WS"} ${PRJ:+-project "$PRJ"} -list -json)"
+          JSON="$(xcodebuild "$FLAG" "$CONTAINER" -list -json)"
           echo "$JSON"
           SCHEME_FOUND="$(printf '%s' "$JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); n=d.get('workspace') or d.get('project') or {}; s=n.get('schemes') or []; print(s[0] if s else '')")"
           if [ -z "$SCHEME_FOUND" ]; then
